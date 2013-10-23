@@ -111,9 +111,9 @@ namespace bitcoin {
                     return pt;
                 }
 
+                boost::asio::io_service& ios;
                 tcp::socket              sock;
                 tcp::endpoint            ep;
-                boost::asio::io_service& ios;
                 bitcoin::client*         self;
 
                 std::string              user;
@@ -133,6 +133,12 @@ client::client( boost::asio::io_service& s )
 client::~client()
 {
     delete my;
+}
+
+bool client::connect( const std::string& host, const std::string& port,
+                      const std::string& user, const std::string& pass)
+{
+    return connect(host + ":" + port, user, pass);
 }
 
 bool client::connect( const std::string& host_port, const std::string& user, const std::string& pass )
@@ -163,12 +169,43 @@ bool client::connect( const std::string& host_port, const std::string& user, con
     }
     my->ep = *epi;
 
-    std::string       getinfo = "{\"jsonrpc\": \"1.0\", \"id\":\"1\", \"method\": \"getinfo\", \"params\": [] }";
+    std::string getinfo = "{\"jsonrpc\": \"1.0\", \"id\":\"1\", \"method\": \"getinfo\", \"params\": [] }";
 
     boost::property_tree::json_parser::write_json( std::cerr, my->request(getinfo) );
     return true;
 }
 
+template <typename T>
+T& ptree_get_wrap(T& sink, boost::property_tree::ptree& source, const char* name)
+{
+    sink = source.get<T>(name);
+    return sink;
+}
+
+#define JSON_RESP_PTREE_GET(source, sink, field) \
+        ptree_get_wrap(sink.field, source, "result."#field)
+
+// curl --user user:pass --data-binary '{"jsonrpc": "1.0", "id":"curltest", "method": "getblocktemplate", "params": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/
+block_template client::getblocktemplate(const std::list<std::string>& capabilities,
+                                        const std::string& mode)
+{
+    std::string req = "{\"jsonrpc\": \"1.0\", \"id\":\"1\", \"method\": \"getblocktemplate\", \"params\": [] }";
+    boost::property_tree::ptree response = my->request(req);
+
+    boost::property_tree::json_parser::write_json(std::cerr, response);
+
+    block_template bt;
+    // ptree_get_wrap(bt.version, response, "version");
+    // ptree_get_wrap(bt.previousblockhash, response, "previousblockhash");
+    JSON_RESP_PTREE_GET(response, bt, version);
+    JSON_RESP_PTREE_GET(response, bt, previousblockhash);
+
+    return bt;
+}
+
+#undef PTREE_GET_WRAP
+
+// curl --user user:pass --data-binary '{"jsonrpc": "1.0", "id":"curltest", "method": "getinfo", "params": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/
 server_info client::getinfo()
 {
     std::string       getinfo = "{\"jsonrpc\": \"1.0\", \"id\":\"1\", \"method\": \"getinfo\", \"params\": [] }";
