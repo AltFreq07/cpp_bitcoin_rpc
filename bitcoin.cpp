@@ -18,9 +18,9 @@ namespace bitcoin {
 
     struct exception : public virtual boost::exception, public virtual std::exception
     {
-        const char* what()const throw()               { return "bitcoin::exception";                       }
-        virtual void       rethrow()const             { BOOST_THROW_EXCEPTION(*this);                  } 
-        const std::string& message()const             { return *boost::get_error_info<bitcoin_msg>(*this); }
+        const char* what()const throw()   { return "bitcoin::exception"; }
+        virtual void       rethrow()const { BOOST_THROW_EXCEPTION(*this); } 
+        const std::string& message()const { return *boost::get_error_info<bitcoin_msg>(*this); }
     };
 
     #define THROW_BITCOIN_EXCEPTION( fmt, ... ) \
@@ -79,11 +79,17 @@ namespace bitcoin {
                     std::getline(response_stream, status_message);
                     if (!response_stream || http_version.substr(0, 5) != "HTTP/")
                     {
-                        THROW_BITCOIN_EXCEPTION( "Invalid Response" );
+                        std::stringstream tmp;
+                        if (response.size() > 0)
+                            tmp << &response;
+                        THROW_BITCOIN_EXCEPTION( "Invalid Response (response: '%1%')", %tmp.str() );
                     }
                     if (status_code != 200)
                     {
-                        THROW_BITCOIN_EXCEPTION( "Response returned with status code %1%", %status_code );
+                        std::stringstream tmp;
+                        if (response.size() > 0)
+                            tmp << &response;
+                        THROW_BITCOIN_EXCEPTION( "Response returned with status code %1% (response: '%2%')", %status_code %tmp.str() );
                     }
                     boost::asio::read_until(sock, response, "\n");
 
