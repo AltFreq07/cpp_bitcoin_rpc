@@ -48,7 +48,6 @@ class client
 
         //getblockbycount( uint32_t height );
         uint32_t                  getblockcount();
-        uint32_t                  getblocknumber();
         uint32_t                  getconnectioncount();
         double                    getdifficulty();
         bool                      getgenerate();

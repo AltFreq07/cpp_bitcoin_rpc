@@ -253,12 +253,6 @@ bool  client::getgenerate()
     ss << "{\"jsonrpc\": \"1.0\", \"id\":\"1\", \"method\": \"getgenerate\", \"params\": []}";
     return my->request(ss.str()).get<std::string>("result")=="true";
 }
-uint32_t  client::getblocknumber()
-{
-    std::stringstream ss;
-    ss << "{\"jsonrpc\": \"1.0\", \"id\":\"1\", \"method\": \"getblocknumber\", \"params\": []}";
-    return my->request(ss.str()).get<uint32_t>("result");
-}
 std::string client::getnewaddress( const std::string& account )
 {
     std::stringstream ss;
