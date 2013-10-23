@@ -111,6 +111,7 @@ class client
 
         block_template getblocktemplate(const std::list<std::string>& capabilities,
                                         const std::string& mode = "template");
+        bool submitblock(const std::string& block, std::string& out_reject_reason);
 
     private:
         detail::client* my;
