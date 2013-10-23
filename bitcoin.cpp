@@ -205,13 +205,17 @@ block_template client::getblocktemplate(const std::list<std::string>& capabiliti
 
 #undef PTREE_GET_WRAP
 
+// Ref.: https://en.bitcoin.it/wiki/BIP_0022#Block_Submission
 bool client::submitblock(const std::string& block, std::string& out_reject_reason)
 {
+    std::string parameters = "{}";  // workid is the only possible parameter now (add it later)
     std::string req = "{\"jsonrpc\": \"1.0\", \"id\":\"1\", \"method\": \"submitblock\", \"params\": [\""
-                        + block + "\", {}] }";
-    // workid parameter can be on the place of '{}'
+                        + block + "\", " + parameters + "] }";
     boost::property_tree::ptree response = my->request(req);
+
     boost::property_tree::json_parser::write_json(std::cerr, response);
+
+    return false;
 }
 
 // curl --user user:pass --data-binary '{"jsonrpc": "1.0", "id":"curltest", "method": "getinfo", "params": [] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/
