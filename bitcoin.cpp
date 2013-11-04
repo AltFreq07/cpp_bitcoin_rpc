@@ -52,11 +52,11 @@ namespace bitcoin {
 
                     boost::asio::streambuf request_buf;
                     std::ostream request_info(&request_buf);
-                    request_info << "POST / HTTP/1.1\n";
-                    request_info << "Host: 127.0.0.1\n";
-                    request_info << "Content-Type: application/json-rpc\n";
-                    request_info << "Authorization: Basic " << b64_password << "\n";
-                    request_info << "Content-Length: "<<json.size() << "\n\n";
+                    request_info << "POST / HTTP/1.1\r\n";
+                    request_info << "Host: 127.0.0.1\r\n";
+                    request_info << "Content-Type: application/json-rpc\r\n";
+                    request_info << "Authorization: Basic " << b64_password << "\r\n";
+                    request_info << "Content-Length: "<<json.size() << "\r\n\r\n";
 
                     request_info << json;
                     std::cout << std::endl;
