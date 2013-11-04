@@ -61,6 +61,7 @@ namespace bitcoin {
                     request_info << json;
                     std::cout << std::endl;
 
+                    // std::clog << "Request: " << json << std::endl;
 
                     boost::asio::write( sock, request_buf );
 
@@ -91,7 +92,10 @@ namespace bitcoin {
                             tmp << &response;
                         THROW_BITCOIN_EXCEPTION( "Response returned with status code %1% (response: '%2%')", %status_code %tmp.str() );
                     }
-                    boost::asio::read_until(sock, response, "\n");
+                    // boost::asio::read_until(sock, response, "\n");
+                    // read untile the end of the http header
+                    boost::asio::read_until(sock, response, "\r\n\r\n");
+                    
 
                 // Process the response headers.
                     std::string header;
@@ -99,10 +103,15 @@ namespace bitcoin {
             //            std::cout << "header:"<< header << "\n";
              //       std::cout << "\n";
 
+                    // read until the end of rpc-json
+                    boost::asio::read_until(sock, response, "\n");
+
                 // Write whatever content we already have to output.
                     std::stringstream req;
                     if (response.size() > 0)
                         req << &response;
+
+                    // std::clog << "Response: " << req.str() << std::endl;
 
                     using boost::property_tree::ptree;
                     ptree  pt;
@@ -192,13 +201,48 @@ block_template client::getblocktemplate(const std::list<std::string>& capabiliti
     std::string req = "{\"jsonrpc\": \"1.0\", \"id\":\"1\", \"method\": \"getblocktemplate\", \"params\": [] }";
     boost::property_tree::ptree response = my->request(req);
 
-    boost::property_tree::json_parser::write_json(std::cerr, response);
+    // boost::property_tree::json_parser::write_json(std::cout, response);
 
     block_template bt;
-    // ptree_get_wrap(bt.version, response, "version");
-    // ptree_get_wrap(bt.previousblockhash, response, "previousblockhash");
     JSON_RESP_PTREE_GET(response, bt, version);
     JSON_RESP_PTREE_GET(response, bt, previousblockhash);
+    
+    boost::property_tree::ptree& resp_transact = response.get_child("result.transactions");
+    std::for_each(resp_transact.begin(), resp_transact.end(),
+                  [&bt](boost::property_tree::ptree::value_type& child) {
+                    transaction tr;
+                    tr.data = child.second.get<std::string>("data");
+                    tr.hash = child.second.get<std::string>("hash");
+
+                    boost::property_tree::ptree& tr_depends = child.second.get_child("depends");
+                    std::for_each(tr_depends.begin(), tr_depends.end(),
+                                  [&tr](const boost::property_tree::ptree::value_type& child) {
+                                    tr.depends.push_back(child.second.get<uint64_t>(""));
+                                  });
+
+                    tr.fee = child.second.get<uint64_t>("fee");
+                    tr.sigops = child.second.get<uint64_t>("sigops");
+                    tr.required = child.second.get<bool>("required", false);
+                    bt.transactions.push_back(tr);
+                  });    
+    
+    JSON_RESP_PTREE_GET(response, bt, coinbaseaux.flags);
+    JSON_RESP_PTREE_GET(response, bt, coinbasevalue);
+    JSON_RESP_PTREE_GET(response, bt, target);
+    JSON_RESP_PTREE_GET(response, bt, mintime);
+
+    boost::property_tree::ptree& resp_mutable = response.get_child("result.mutable");
+    std::for_each(resp_mutable.begin(), resp_mutable.end(),
+                  [&bt](const boost::property_tree::ptree::value_type& child) {
+                    bt.mutable_.push_back(child.second.get<std::string>(""));
+                  });
+    
+    JSON_RESP_PTREE_GET(response, bt, noncerange);
+    JSON_RESP_PTREE_GET(response, bt, sigoplimit);
+    JSON_RESP_PTREE_GET(response, bt, sizelimit);
+    JSON_RESP_PTREE_GET(response, bt, curtime);
+    JSON_RESP_PTREE_GET(response, bt, bits);
+    JSON_RESP_PTREE_GET(response, bt, height);
 
     return bt;
 }

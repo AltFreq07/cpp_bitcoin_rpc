@@ -40,7 +40,7 @@ struct transaction
 {
     std::string data;
     std::string hash;
-    std::list<uint64_t> depends;
+    std::list<uint64_t> depends;    // 1-based indices of transactions we depend on
     uint64_t fee;
     uint64_t sigops;
     bool required;  // non-required, not implemented in bitcoind, default value = false
@@ -64,7 +64,7 @@ struct block_template
     uint64_t coinbasevalue;
     std::string target; // hex
     uint64_t mintime;
-    // mutable_;   // not in BIP-0022, in BIP-0023, implemented in bitcoind
+    std::list<std::string> mutable_;   // not in BIP-0022, in BIP-0023, implemented in bitcoind
     std::string noncerange; // hex
     uint64_t sigoplimit;  // non-required, implemented in bitcoind
     uint64_t sizelimit;   // non-required, implemented in bitcoind
