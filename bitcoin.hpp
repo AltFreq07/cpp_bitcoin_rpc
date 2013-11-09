@@ -39,7 +39,7 @@ struct server_info
 struct transaction
 {
     std::string data;
-    std::string hash;
+    std::string hash;   // hex, little-endian
     std::list<uint64_t> depends;    // 1-based indices of transactions we depend on
     uint64_t fee;
     uint64_t sigops;
@@ -57,7 +57,7 @@ struct coinbaseaux
 struct block_template
 {
     uint64_t version;
-    std::string previousblockhash;  // hex
+    std::string previousblockhash;  // hex, big-endian
     std::list<transaction> transactions;
     struct coinbaseaux coinbaseaux;  // non-required, implemented in bitcoind
     // transaction coinbasetxn; // not implemented in bitcoind
@@ -69,7 +69,7 @@ struct block_template
     uint64_t sigoplimit;  // non-required, implemented in bitcoind
     uint64_t sizelimit;   // non-required, implemented in bitcoind
     uint64_t curtime;
-    std::string bits;   // hex
+    std::string bits;   // hex, current target in compact format
     uint64_t height;
 };
 
