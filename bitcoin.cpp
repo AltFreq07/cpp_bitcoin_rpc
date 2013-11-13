@@ -26,6 +26,7 @@ namespace bitcoin {
     #define THROW_BITCOIN_EXCEPTION( fmt, ... ) \
             do { \
                 std::stringstream ss; ss << boost::format(fmt) __VA_ARGS__;\
+                std::cerr << "BitcoinRPC: " << ss.str() << std::endl;\
                 BOOST_THROW_EXCEPTION( ::bitcoin::exception() << ::bitcoin::bitcoin_msg(ss.str()) ); \
             } while(0)
 
