@@ -257,7 +257,12 @@ bool client::submitblock(const std::string& block, std::string& out_reject_reaso
                         + block + "\", " + parameters + "] }";
     boost::property_tree::ptree response = my->request(req);
 
-    boost::property_tree::json_parser::write_json(std::cerr, response);
+//    boost::property_tree::json_parser::write_json(std::cerr, response);
+
+    out_reject_reason.append("result: ")
+                     .append(response.get<std::string>("result"))
+                     .append(" error: ")
+                     .append(response.get<std::string>("error"));
 
     return false;
 }
